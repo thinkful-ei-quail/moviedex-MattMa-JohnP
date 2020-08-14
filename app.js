@@ -4,7 +4,8 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
-app.use(morgan('dev'));
+const morganSetting = (process.env.NODE_ENV === 'production') ? 'tiny' : 'common';
+app.use(morgan(morganSetting));
 app.use(helmet());
 app.use(cors());
 const data = require('./movies-data');
@@ -35,8 +36,20 @@ app.get('/movie', function handleGetMovie(req, res) {
   res.json(results);
 });
 
-const PORT = 8000;
+// eslint-disable-next-line no-unused-vars
+app.use((error, req, res, next) => {
+  let response;
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error' } };
+  } else {
+    response = { error };
+  }
+  res.status(500).json(response);
+});
+
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server listening at http://localhost:${PORT}`);
 });
